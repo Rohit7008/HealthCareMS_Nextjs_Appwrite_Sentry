@@ -1,7 +1,7 @@
 "use server";
 
-import { ID,  Query, AppwriteException } from "node-appwrite";
-import {InputFile} from "node-appwrite/file"; 
+import { ID, Query, AppwriteException } from "node-appwrite";
+import { InputFile } from "node-appwrite/file"; 
 import {
   BUCKET_ID,
   DATABASE_ID,
@@ -17,8 +17,7 @@ import { parseStringify } from "../utils";
 // CREATE APPWRITE USER
 export const createUser = async (user: CreateUserParams) => {
   try {
-    // Create new user -> https://appwrite.io/docs/references/1.5.x/server-nodejs/users#create
-    const newuser = await users.create(
+    const newUser = await users.create(
       ID.unique(),
       user.email,
       user.phone,
@@ -26,17 +25,16 @@ export const createUser = async (user: CreateUserParams) => {
       user.name
     );
 
-    return parseStringify(newuser);
-  } catch (error: any) {
-    // Check existing user
-    if (error && error?.code === 409) {
+    return parseStringify(newUser);
+  } catch (error) {
+    if (error instanceof AppwriteException && error.code === 409) {
       const existingUser = await users.list([
         Query.equal("email", [user.email]),
       ]);
-
       return existingUser.users[0];
     }
     console.error("An error occurred while creating a new user:", error);
+    throw error;
   }
 };
 
@@ -50,11 +48,14 @@ export const getUser = async (userId?: string) => {
     const user = await users.get(userId);
     return parseStringify(user);
   } catch (error) {
-    console.error("An error occurred while retrieving user details:", error);
+    if (error instanceof AppwriteException) {
+      console.error("An error occurred while retrieving user details:", error.message);
+    } else {
+      console.error("Unexpected error:", error);
+    }
     throw error;
   }
 };
-
 
 // REGISTER PATIENT
 export const registerPatient = async ({
@@ -62,26 +63,21 @@ export const registerPatient = async ({
   ...patient
 }: RegisterUserParams) => {
   try {
-    // Upload file ->  // https://appwrite.io/docs/references/cloud/client-web/storage#createFile
     let file;
     if (identificationDocument) {
-      const inputFile =
-        identificationDocument &&
-        InputFile.fromBuffer(
-          identificationDocument?.get("blobFile") as Blob,
-          identificationDocument?.get("fileName") as string
-        );
-
+      const inputFile = InputFile.fromBuffer(
+        identificationDocument.get("blobFile") as Blob,
+        identificationDocument.get("fileName") as string
+      );
       file = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile);
     }
 
-    // Create new patient document -> https://appwrite.io/docs/references/cloud/server-nodejs/databases#createDocument
     const newPatient = await databases.createDocument(
       DATABASE_ID!,
       PATIENT_COLLECTION_ID!,
       ID.unique(),
       {
-        identificationDocumentId: file?.$id ? file.$id : null,
+        identificationDocumentId: file?.$id || null,
         identificationDocumentUrl: file?.$id
           ? `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file.$id}/view??project=${PROJECT_ID}`
           : null,
@@ -91,7 +87,12 @@ export const registerPatient = async ({
 
     return parseStringify(newPatient);
   } catch (error) {
-    console.error("An error occurred while creating a new patient:", error);
+    if (error instanceof AppwriteException) {
+      console.error("An error occurred while creating a new patient:", error.message);
+    } else {
+      console.error("Unexpected error:", error);
+    }
+    throw error;
   }
 };
 
@@ -106,8 +107,11 @@ export const getPatient = async (userId: string) => {
 
     return parseStringify(patients.documents[0]);
   } catch (error) {
-    const err = error as AppwriteException;
-    console.error("An error occurred while retrieving the patient details:", err.message);
-    throw err;
+    if (error instanceof AppwriteException) {
+      console.error("An error occurred while retrieving the patient details:", error.message);
+    } else {
+      console.error("Unexpected error:", error);
+    }
+    throw error;
   }
 };
