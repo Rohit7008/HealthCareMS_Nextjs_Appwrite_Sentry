@@ -8,7 +8,7 @@ import { getPatient } from "@/lib/actions/patient.actions";
 interface Patient {
   $id: string;
   name: string;
-  age?: number;
+  age?: number; // Optional property
   // Add more patient properties if needed
 }
 
@@ -29,12 +29,20 @@ const AppointmentClient = () => {
 
     const fetchPatient = async () => {
       try {
-        const patientData: Patient | null = await getPatient(userid);
-        if (!patientData) {
+        const documentData = await getPatient(userid); // Returns Document | null
+        if (!documentData) {
           setError("Patient data not found");
-        } else {
-          setPatient(patientData);
+          return;
         }
+
+        // Ensure the documentData has required properties before assigning it to Patient
+        const patientData: Patient = {
+          $id: documentData.$id,
+          name: documentData.name ?? "Unknown", // Ensure 'name' exists
+          age: documentData.age ?? undefined, // Optional field
+        };
+
+        setPatient(patientData);
       } catch (err) {
         console.error("❌ Error fetching patient:", err);
         setError("Error loading patient data");

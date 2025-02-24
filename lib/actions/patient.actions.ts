@@ -14,6 +14,16 @@ import {
 } from "../appwrite.config";
 import { parseStringify } from "../utils";
 
+// Patient interface to define the expected data
+interface Patient {
+  $id: string;
+  name: string;
+  age?: number;
+  userId: string;
+  identificationDocumentId?: string | null;
+  identificationDocumentUrl?: string | null;
+}
+
 // CREATE APPWRITE USER
 export const createUser = async (user: CreateUserParams) => {
   try {
@@ -28,9 +38,7 @@ export const createUser = async (user: CreateUserParams) => {
     return parseStringify(newUser);
   } catch (error) {
     if (error instanceof AppwriteException && error.code === 409) {
-      const existingUser = await users.list([
-        Query.equal("email", [user.email]),
-      ]);
+      const existingUser = await users.list([Query.equal("email", [user.email])]);
       return existingUser.users[0];
     }
     console.error("An error occurred while creating a new user:", error);
@@ -58,10 +66,7 @@ export const getUser = async (userId?: string) => {
 };
 
 // REGISTER PATIENT
-export const registerPatient = async ({
-  identificationDocument,
-  ...patient
-}: RegisterUserParams) => {
+export const registerPatient = async ({ identificationDocument, ...patient }: RegisterUserParams) => {
   try {
     let file;
     if (identificationDocument) {
@@ -79,7 +84,7 @@ export const registerPatient = async ({
       {
         identificationDocumentId: file?.$id || null,
         identificationDocumentUrl: file?.$id
-          ? `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file.$id}/view??project=${PROJECT_ID}`
+          ? `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`
           : null,
         ...patient,
       }
@@ -97,7 +102,7 @@ export const registerPatient = async ({
 };
 
 // GET PATIENT
-export const getPatient = async (userId: string) => {
+export const getPatient = async (userId: string): Promise<Patient | null> => {
   try {
     const patients = await databases.listDocuments(
       DATABASE_ID!,
@@ -105,7 +110,23 @@ export const getPatient = async (userId: string) => {
       [Query.equal("userId", [userId])]
     );
 
-    return parseStringify(patients.documents[0]);
+    if (patients.documents.length === 0) {
+      return null;
+    }
+
+    const patientData = patients.documents[0]; // Assuming the first document is the correct one
+
+    // Map Appwrite document to Patient interface
+    const patient: Patient = {
+      $id: patientData.$id,
+      name: patientData.name ?? "Unknown", // Default to "Unknown" if name is missing
+      age: patientData.age ?? undefined,   // Optional field, defaults to undefined
+      userId: patientData.userId,          // Ensure userId is present
+      identificationDocumentId: patientData.identificationDocumentId ?? null,
+      identificationDocumentUrl: patientData.identificationDocumentUrl ?? null,
+    };
+
+    return patient;
   } catch (error) {
     if (error instanceof AppwriteException) {
       console.error("An error occurred while retrieving the patient details:", error.message);
