@@ -22,6 +22,19 @@ import CustomFormField, { FormFieldType } from "../CustomFormField";
 import SubmitButton from "../SubmitButton";
 import { Form } from "@/components/ui/form";
 
+interface CreateAppointmentParams {
+  $id?: string;
+  userId: string;
+  patient: string;
+  primaryPhysician?: string;
+  schedule: string;
+  status: string;
+  reason?: string;
+  note?: string;
+  phone: string;
+  name: string;
+}
+
 export const AppointmentForm = ({
   userId,
   patientId,
@@ -39,18 +52,38 @@ export const AppointmentForm = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const AppointmentFormValidation = getAppointmentSchema(type);
+  console.log("Appointment Schema:", AppointmentFormValidation);
+
+  // ✅ Validate default values before form initialization
+  const parsedDefaultValues = AppointmentFormValidation.safeParse(
+    appointment
+      ? {
+          primaryPhysician: appointment.primaryPhysician || "",
+          schedule: appointment.schedule
+            ? new Date(appointment.schedule)
+            : new Date(),
+          reason: appointment.reason || "",
+          note: appointment.note || "",
+          cancellationReason: appointment.cancellationReason || "",
+        }
+      : {} // ✅ Ensures default empty object
+  );
+
+  if (!parsedDefaultValues.success) {
+    console.error("Zod Validation Error:", parsedDefaultValues.error.format());
+  }
 
   const form = useForm<z.infer<typeof AppointmentFormValidation>>({
     resolver: zodResolver(AppointmentFormValidation),
-    defaultValues: {
-      primaryPhysician: appointment ? appointment?.primaryPhysician : "",
-      schedule: appointment
-        ? new Date(appointment?.schedule!)
-        : new Date(Date.now()),
-      reason: appointment ? appointment.reason : "",
-      note: appointment?.note || "",
-      cancellationReason: appointment?.cancellationReason || "",
-    },
+    defaultValues: parsedDefaultValues.success
+      ? parsedDefaultValues.data
+      : {
+          primaryPhysician: "",
+          schedule: new Date(),
+          reason: "",
+          note: "",
+          cancellationReason: "",
+        },
   });
 
   const onSubmit = async (
@@ -58,7 +91,7 @@ export const AppointmentForm = ({
   ) => {
     setIsLoading(true);
 
-    let status;
+    let status: "pending" | "scheduled" | "cancelled";
     switch (type) {
       case "schedule":
         status = "scheduled";
@@ -72,38 +105,45 @@ export const AppointmentForm = ({
 
     try {
       if (type === "create" && patientId) {
-        const appointment = {
+        // ✅ Creating a new appointment
+        const newAppointment: CreateAppointmentParams = {
           userId,
           patient: patientId,
           primaryPhysician: values.primaryPhysician,
-          schedule: new Date(values.schedule).toISOString(), // ✅ Convert to string
-          reason: values.reason!,
-          status: status as Status,
-          note: values.note,
-          phone: "1234567890", // ✅ Add phone (replace with actual value)
-          name: "John Doe", // ✅ Add name (replace with actual value)
+          schedule: new Date(values.schedule).toISOString(),
+          reason: values.reason || "",
+          status,
+          note: values.note || "",
+          phone: "1234567890", // Replace with actual value
+          name: "John Doe",
         };
 
-        const newAppointment = await createAppointment(appointment);
+        const createdAppointment = await createAppointment(newAppointment);
 
-        if (newAppointment) {
+        if (createdAppointment) {
           form.reset();
           router.push(
-            `/patients/${userId}/new-appointment/success?appointmentId=${newAppointment.$id}`
+            `/patients/${userId}/new-appointment/success?appointmentId=${createdAppointment.$id}`
           );
         }
-      } else {
+      } else if (type === "schedule" || type === "cancel") {
+        // ✅ Updating an existing appointment
+        if (!appointment?.$id) throw new Error("Appointment ID is missing.");
+
         const appointmentToUpdate = {
           userId,
-          appointmentId: appointment?.$id!,
+          appointmentId: appointment.$id,
           appointment: {
             primaryPhysician: values.primaryPhysician,
-            schedule: new Date(values.schedule), // ✅ Keep as Date
-            status: status as Status,
-            cancellationReason: values.cancellationReason,
+            schedule:
+              values.schedule instanceof Date
+                ? values.schedule
+                : new Date(values.schedule),
+            status,
+            cancellationReason: values.cancellationReason || "",
           },
-          type: type as "schedule" | "cancel",
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, // ✅ Add missing timeZone
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          type,
         };
 
         const updatedAppointment = await updateAppointment(appointmentToUpdate);
@@ -114,22 +154,17 @@ export const AppointmentForm = ({
         }
       }
     } catch (error) {
-      console.log(error);
+      console.error("Appointment API Error:", error);
     }
     setIsLoading(false);
   };
 
-  let buttonLabel;
-  switch (type) {
-    case "cancel":
-      buttonLabel = "Cancel Appointment";
-      break;
-    case "schedule":
-      buttonLabel = "Schedule Appointment";
-      break;
-    default:
-      buttonLabel = "Submit Apppointment";
-  }
+  const buttonLabel =
+    type === "cancel"
+      ? "Cancel Appointment"
+      : type === "schedule"
+      ? "Schedule Appointment"
+      : "Submit Appointment";
 
   return (
     <Form {...form}>
@@ -178,7 +213,7 @@ export const AppointmentForm = ({
             />
 
             <div
-              className={`flex flex-col gap-6  ${
+              className={`flex flex-col gap-6 ${
                 type === "create" && "xl:flex-row"
               }`}
             >
@@ -187,7 +222,7 @@ export const AppointmentForm = ({
                 control={form.control}
                 name="reason"
                 label="Appointment reason"
-                placeholder="Annual montly check-up"
+                placeholder="Annual monthly check-up"
                 disabled={type === "schedule"}
               />
 

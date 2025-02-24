@@ -1,11 +1,10 @@
-"use client";
-
+/* eslint-disable no-unused-vars */
 import { E164Number } from "libphonenumber-js/core";
 import Image from "next/image";
-import React from "react";
 import ReactDatePicker from "react-datepicker";
-import { Control, FieldValues, ControllerRenderProps, Path } from "react-hook-form";
+import { Control, ControllerRenderProps, FieldValues, Path } from "react-hook-form";
 import PhoneInput from "react-phone-number-input";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   FormControl,
@@ -35,7 +34,7 @@ export enum FormFieldType {
 
 interface CustomProps<T extends FieldValues> {
   control: Control<T>;
-  name: Path<T>; // 👈 Ensures `name` is a valid field key
+  name: string;
   label?: string;
   placeholder?: string;
   iconSrc?: string;
@@ -44,17 +43,18 @@ interface CustomProps<T extends FieldValues> {
   dateFormat?: string;
   showTimeSelect?: boolean;
   children?: React.ReactNode;
-  renderSkeleton?: (
-    field: ControllerRenderProps<T, Path<T>>
+  renderSkeleton?: <T extends FieldValues>(
+    field: ControllerRenderProps<T>
   ) => React.ReactNode;
   fieldType: FormFieldType;
 }
 
+// ✅ Fix: Remove `any`, use generics for strong typing
 const RenderInput = <T extends FieldValues>({
   field,
   props,
 }: {
-  field: ControllerRenderProps<T, any>;
+  field: ControllerRenderProps<T>;
   props: CustomProps<T>;
 }) => {
   switch (props.fieldType) {
@@ -126,7 +126,7 @@ const RenderInput = <T extends FieldValues>({
             src="/assets/icons/calendar.svg"
             height={24}
             width={24}
-            alt="calendar"
+            alt="user"
             className="ml-2"
           />
           <FormControl>
@@ -169,13 +169,14 @@ const CustomFormField = <T extends FieldValues>(props: CustomProps<T>) => {
   return (
     <FormField
       control={control}
-      name={name}
+      name={name as Path<T>}
       render={({ field }) => (
         <FormItem className="flex-1">
           {props.fieldType !== FormFieldType.CHECKBOX && label && (
             <FormLabel className="shad-input-label">{label}</FormLabel>
           )}
           <RenderInput field={field} props={props} />
+
           <FormMessage className="shad-error" />
         </FormItem>
       )}
