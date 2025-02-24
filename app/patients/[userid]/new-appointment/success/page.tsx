@@ -1,11 +1,13 @@
-import { useSearchParams } from "next/navigation";
+"use client";
+
+import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Doctors } from "@/constants";
-
+import { formatDateTime } from "@/lib/utils";
 
 // Define the expected structure for an appointment
 interface Appointment {
@@ -14,28 +16,34 @@ interface Appointment {
   schedule: string;
 }
 
-// Define the correct PageProps type
-interface PageProps {
-  params: Promise<{ userid: string }>; // Make params a Promise
+export async function getAppointment(
+  appointmentId: string
+): Promise<Appointment> {
+  // Your existing code to fetch the appointment
+  // For example purposes, returning a mock appointment object
+  return {
+    id: appointmentId,
+    primaryPhysician: "Dr. John Doe",
+    schedule: new Date().toISOString(),
+  };
 }
 
-const RequestSuccess = async ({ params }: PageProps) => {
-  const { userid } = await params; // Await params here
-
-  return <ClientComponent userid={userid} />;
-};
-
-// Move client-side logic into a separate client component
-const ClientComponent = ({ userid }: { userid: string }) => {
+const RequestSuccess = () => {
+  const params = useParams(); // Fix: Use useParams() instead of direct props
+  const userid = params.userid as string;
   const searchParams = useSearchParams();
   const appointmentId = searchParams.get("appointmentId") || "";
   const [appointment, setAppointment] = useState<Appointment | null>(null);
 
   useEffect(() => {
     if (appointmentId) {
-      getAppointment(appointmentId).then((data: Appointment) =>
-        setAppointment(data)
-      );
+      getAppointment(appointmentId)
+        .then((data: Appointment) => {
+          setAppointment(data);
+        })
+        .catch((error) => {
+          console.error("Error fetching appointment:", error);
+        });
     }
   }, [appointmentId]);
 
@@ -93,14 +101,7 @@ const ClientComponent = ({ userid }: { userid: string }) => {
               width={24}
               alt="calendar"
             />
-            <p>
-              {
-                formatAppointmentDateTime(
-                  appointment.schedule,
-                  Intl.DateTimeFormat().resolvedOptions().timeZone
-                ).dateTime
-              }
-            </p>
+            <p>{formatDateTime(appointment.schedule).dateTime}</p>
           </div>
         </section>
 
@@ -117,25 +118,3 @@ const ClientComponent = ({ userid }: { userid: string }) => {
 };
 
 export default RequestSuccess;
-
-export async function getAppointment(
-  appointmentId: string
-): Promise<Appointment> {
-  // Your existing code to fetch the appointment
-  // Ensure that the function returns an Appointment type
-  return {
-    id: appointmentId,
-    primaryPhysician: "Dr. Smith",
-    schedule: new Date().toISOString(),
-  };
-}
-
-export function formatAppointmentDateTime(
-  dateTime: string,
-  timeZone: string
-): { dateTime: string } {
-  const date = new Date(dateTime);
-  return {
-    dateTime: date.toLocaleString("en-US", { timeZone }),
-  };
-}
