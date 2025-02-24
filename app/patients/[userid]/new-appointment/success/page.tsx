@@ -8,28 +8,10 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Doctors } from "@/constants";
 import { formatDateTime } from "@/lib/utils";
-
-// Define the expected structure for an appointment
-interface Appointment {
-  id: string;
-  primaryPhysician: string;
-  schedule: string;
-}
-
-export async function getAppointment(
-  appointmentId: string
-): Promise<Appointment> {
-  // Your existing code to fetch the appointment
-  // For example purposes, returning a mock appointment object
-  return {
-    id: appointmentId,
-    primaryPhysician: "Dr. John Doe",
-    schedule: new Date().toISOString(),
-  };
-}
+import { getAppointment, Appointment } from "@/lib/api"; // Import API function
 
 const RequestSuccess = () => {
-  const params = useParams(); // Fix: Use useParams() instead of direct props
+  const params = useParams();
   const userid = params.userid as string;
   const searchParams = useSearchParams();
   const appointmentId = searchParams.get("appointmentId") || "";
@@ -38,12 +20,8 @@ const RequestSuccess = () => {
   useEffect(() => {
     if (appointmentId) {
       getAppointment(appointmentId)
-        .then((data: Appointment) => {
-          setAppointment(data);
-        })
-        .catch((error) => {
-          console.error("Error fetching appointment:", error);
-        });
+        .then((data) => setAppointment(data))
+        .catch((error) => console.error("Error fetching appointment:", error));
     }
   }, [appointmentId]);
 
@@ -83,10 +61,10 @@ const RequestSuccess = () => {
         </section>
 
         <section className="request-details">
-          <p>Requested appointment details: </p>
+          <p>Requested appointment details:</p>
           <div className="flex items-center gap-3">
             <Image
-              src={doctor?.image || "/assets/icons/doctor-placeholder.png"}
+              src={doctor?.image || "/assets/icons/doctor-placeholder.svg"}
               alt="doctor"
               width={100}
               height={100}
