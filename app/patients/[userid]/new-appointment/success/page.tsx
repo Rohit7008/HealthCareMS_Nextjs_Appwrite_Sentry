@@ -79,7 +79,7 @@ const RequestSuccess = () => {
               width={24}
               alt="calendar"
             />
-            <p>{formatDateTime(appointment.schedule).dateTime}</p>
+            <p>{formatDateTime(new Date(appointment.schedule), 'UTC').dateTime}</p>
           </div>
         </section>
 

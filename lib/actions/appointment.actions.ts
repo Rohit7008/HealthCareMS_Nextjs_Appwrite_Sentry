@@ -108,7 +108,7 @@ export const sendSMSNotification = async (userId: string, content: string) => {
   }
 };
 
-//  UPDATE APPOINTMENT
+// UPDATE APPOINTMENT
 export const updateAppointment = async ({
   appointmentId,
   userId,
@@ -126,15 +126,15 @@ export const updateAppointment = async ({
 
     if (!updatedAppointment) throw Error;
 
+    // Adjust formatDateTime to use only one argument for schedule
+    const formattedDateTime = formatDateTime(appointment.schedule, timeZone); // Pass only schedule and timeZone
+
     const smsMessage = `Greetings from CarePulse. ${
       type === "schedule"
-        ? `Your appointment is confirmed for ${
-            formatDateTime(appointment.schedule!, timeZone).dateTime
-          } with Dr. ${appointment.primaryPhysician}`
-        : `We regret to inform that your appointment for ${
-            formatDateTime(appointment.schedule!, timeZone).dateTime
-          } is cancelled. Reason: ${appointment.cancellationReason}`
+        ? `Your appointment is confirmed for ${formattedDateTime.dateTime} with Dr. ${appointment.primaryPhysician}`
+        : `We regret to inform that your appointment for ${formattedDateTime.dateTime} is cancelled. Reason: ${appointment.cancellationReason}`
     }.`;
+
     await sendSMSNotification(userId, smsMessage);
 
     revalidatePath("/admin");
