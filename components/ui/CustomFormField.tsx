@@ -1,8 +1,10 @@
-/* eslint-disable no-unused-vars */
+"use client";
+
 import { E164Number } from "libphonenumber-js/core";
 import Image from "next/image";
+import React from "react";
 import ReactDatePicker from "react-datepicker";
-import { Control } from "react-hook-form";
+import { Control, FieldValues, ControllerRenderProps } from "react-hook-form";
 import PhoneInput from "react-phone-number-input";
 
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,7 +16,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select"; 
+import {
+  Select,
+  SelectContent,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 export enum FormFieldType {
@@ -27,8 +34,8 @@ export enum FormFieldType {
   SKELETON = "skeleton",
 }
 
-interface CustomProps {
-  control: Control<any>;
+interface CustomProps<T extends FieldValues> {
+  control: Control<T>;
   name: string;
   label?: string;
   placeholder?: string;
@@ -38,11 +45,17 @@ interface CustomProps {
   dateFormat?: string;
   showTimeSelect?: boolean;
   children?: React.ReactNode;
-  renderSkeleton?: (field: any) => React.ReactNode;
+  renderSkeleton?: (field: ControllerRenderProps<T, any>) => React.ReactNode;
   fieldType: FormFieldType;
 }
 
-const RenderInput = ({ field, props }: { field: any; props: CustomProps }) => {
+const RenderInput = <T extends FieldValues>({
+  field,
+  props,
+}: {
+  field: ControllerRenderProps<T, any>;
+  props: CustomProps<T>;
+}) => {
   switch (props.fieldType) {
     case FormFieldType.INPUT:
       return (
@@ -112,7 +125,7 @@ const RenderInput = ({ field, props }: { field: any; props: CustomProps }) => {
             src="/assets/icons/calendar.svg"
             height={24}
             width={24}
-            alt="user"
+            alt="calendar"
             className="ml-2"
           />
           <FormControl>
@@ -149,7 +162,7 @@ const RenderInput = ({ field, props }: { field: any; props: CustomProps }) => {
   }
 };
 
-const CustomFormField = (props: CustomProps) => {
+const CustomFormField = <T extends FieldValues>(props: CustomProps<T>) => {
   const { control, name, label } = props;
 
   return (
@@ -162,7 +175,6 @@ const CustomFormField = (props: CustomProps) => {
             <FormLabel className="shad-input-label">{label}</FormLabel>
           )}
           <RenderInput field={field} props={props} />
-
           <FormMessage className="shad-error" />
         </FormItem>
       )}

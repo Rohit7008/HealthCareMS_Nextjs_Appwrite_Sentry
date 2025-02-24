@@ -10,6 +10,13 @@ import { Doctors } from "@/constants";
 import { getAppointment } from "@/lib/actions/appointment.actions";
 import { formatDateTime } from "@/lib/utils";
 
+// Define the expected structure for an appointment
+interface Appointment {
+  id: string;
+  primaryPhysician: string;
+  schedule: string;
+}
+
 const RequestSuccess = ({
   params: { userId },
 }: {
@@ -17,11 +24,13 @@ const RequestSuccess = ({
 }) => {
   const searchParams = useSearchParams();
   const appointmentId = searchParams.get("appointmentId") || "";
-  const [appointment, setAppointment] = useState<any>(null);
+  const [appointment, setAppointment] = useState<Appointment | null>(null);
 
   useEffect(() => {
     if (appointmentId) {
-      getAppointment(appointmentId).then(setAppointment);
+      getAppointment(appointmentId).then((data: Appointment) =>
+        setAppointment(data)
+      );
     }
   }, [appointmentId]);
 
@@ -96,7 +105,7 @@ const RequestSuccess = ({
           </Link>
         </Button>
 
-        <p className="copyright">© 2024 CarePluse</p>
+        <p className="copyright">© 2024 CarePulse</p>
       </div>
     </div>
   );
