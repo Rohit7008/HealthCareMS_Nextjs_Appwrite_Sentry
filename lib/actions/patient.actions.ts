@@ -1,6 +1,6 @@
 "use server";
 
-import { ID,  Query } from "node-appwrite";
+import { ID,  Query, AppwriteException } from "node-appwrite";
 import {InputFile} from "node-appwrite/file"; 
 import {
   BUCKET_ID,
@@ -106,9 +106,8 @@ export const getPatient = async (userId: string) => {
 
     return parseStringify(patients.documents[0]);
   } catch (error) {
-    console.error(
-      "An error occurred while retrieving the patient details:",
-      error
-    );
+    const err = error as AppwriteException;
+    console.error("An error occurred while retrieving the patient details:", err.message);
+    throw err;
   }
 };

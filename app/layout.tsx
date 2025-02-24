@@ -5,7 +5,6 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 
 // Define fontSans correctly
 const fontSans = Plus_Jakarta_Sans({
-  variable: "--font-sans",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
 });
@@ -17,16 +16,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
       <body
         className={cn(
-          "min-h-screen bg-dark-300 font-sans antialiased",
-          fontSans.variable
+          "min-h-screen bg-dark-300 antialiased",
+          fontSans.className // ✅ Correct usage
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="dark">

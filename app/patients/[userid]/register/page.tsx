@@ -14,12 +14,6 @@ interface User {
   phone: string;
 }
 
-interface Patient {
-  id: string;
-  userId: string;
-  status: string;
-}
-
 const Register = () => {
   const params = useParams();
   const router = useRouter(); // ✅ Initialize useRouter
@@ -28,7 +22,6 @@ const Register = () => {
     : params.userid ?? "";
 
   const [user, setUser] = useState<User | null>(null);
-  const [patient, setPatient] = useState<Patient | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -55,12 +48,6 @@ const Register = () => {
 
         const fetchedPatient = await getPatient(userid);
         if (fetchedPatient) {
-          setPatient({
-            id: fetchedPatient.$id,
-            userId: fetchedPatient.userId ?? "",
-            status: fetchedPatient.status ?? "",
-          });
-
           // ✅ Redirect using useRouter instead of redirect()
           router.push(`/patients/${userid}/new-appointment`);
           return;

@@ -128,7 +128,9 @@ export const AppointmentForm = ({
         }
       } else if (type === "schedule" || type === "cancel") {
         // ✅ Updating an existing appointment
-        if (!appointment?.$id) throw new Error("Appointment ID is missing.");
+        if (!appointment?.$id) {
+          throw new Error("Appointment ID is missing.");
+        }
 
         const appointmentToUpdate = {
           userId,
@@ -149,13 +151,16 @@ export const AppointmentForm = ({
         const updatedAppointment = await updateAppointment(appointmentToUpdate);
 
         if (updatedAppointment) {
-          setOpen && setOpen(false);
+          if (setOpen) {
+            setOpen(false);
+          }
           form.reset();
         }
       }
     } catch (error) {
       console.error("Appointment API Error:", error);
     }
+
     setIsLoading(false);
   };
 
