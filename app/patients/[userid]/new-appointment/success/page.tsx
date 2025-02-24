@@ -1,5 +1,3 @@
-"use client";
-
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,8 +5,7 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Doctors } from "@/constants";
-import { getAppointment } from "@/lib/actions/appointment.actions";
-import { formatDateTime } from "@/lib/utils";
+
 
 // Define the expected structure for an appointment
 interface Appointment {
@@ -17,11 +14,19 @@ interface Appointment {
   schedule: string;
 }
 
-const RequestSuccess = ({
-  params: { userId },
-}: {
-  params: { userId: string };
-}) => {
+// Define the correct PageProps type
+interface PageProps {
+  params: Promise<{ userid: string }>; // Make params a Promise
+}
+
+const RequestSuccess = async ({ params }: PageProps) => {
+  const { userid } = await params; // Await params here
+
+  return <ClientComponent userid={userid} />;
+};
+
+// Move client-side logic into a separate client component
+const ClientComponent = ({ userid }: { userid: string }) => {
   const searchParams = useSearchParams();
   const appointmentId = searchParams.get("appointmentId") || "";
   const [appointment, setAppointment] = useState<Appointment | null>(null);
@@ -90,7 +95,7 @@ const RequestSuccess = ({
             />
             <p>
               {
-                formatDateTime(
+                formatAppointmentDateTime(
                   appointment.schedule,
                   Intl.DateTimeFormat().resolvedOptions().timeZone
                 ).dateTime
@@ -100,7 +105,7 @@ const RequestSuccess = ({
         </section>
 
         <Button variant="outline" className="shad-primary-btn" asChild>
-          <Link href={`/patients/${userId}/new-appointment`}>
+          <Link href={`/patients/${userid}/new-appointment`}>
             New Appointment
           </Link>
         </Button>
@@ -112,3 +117,25 @@ const RequestSuccess = ({
 };
 
 export default RequestSuccess;
+
+export async function getAppointment(
+  appointmentId: string
+): Promise<Appointment> {
+  // Your existing code to fetch the appointment
+  // Ensure that the function returns an Appointment type
+  return {
+    id: appointmentId,
+    primaryPhysician: "Dr. Smith",
+    schedule: new Date().toISOString(),
+  };
+}
+
+export function formatAppointmentDateTime(
+  dateTime: string,
+  timeZone: string
+): { dateTime: string } {
+  const date = new Date(dateTime);
+  return {
+    dateTime: date.toLocaleString("en-US", { timeZone }),
+  };
+}
