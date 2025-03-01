@@ -18,7 +18,7 @@ const PatientCell = ({ userId }: { userId: string }) => {
       try {
         const patient = await fetchPatientById(userId);
         setPatientName(patient?.name ?? "N/A");
-      } catch (error) {
+      } catch {
         setPatientName("N/A");
       }
     };

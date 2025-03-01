@@ -24,6 +24,12 @@ interface Patient {
   identificationDocumentUrl?: string | null;
 }
 
+// IdentificationDocument interface
+interface IdentificationDocument {
+  blobFile: Blob;
+  fileName: string;
+}
+
 // CREATE USER
 export const createUser = async (user: { email: string; phone: string; name: string }) => {
   try {
@@ -66,7 +72,7 @@ export const registerPatient = async ({
   identificationDocument,
   ...patient
 }: {
-  identificationDocument?: any;
+  identificationDocument?: IdentificationDocument;
   name: string;
   age?: number;
   userId: string;
@@ -75,8 +81,8 @@ export const registerPatient = async ({
     let file;
     if (identificationDocument) {
       const inputFile = InputFile.fromBuffer(
-        identificationDocument.get("blobFile") as Blob,
-        identificationDocument.get("fileName") as string
+        identificationDocument.blobFile,
+        identificationDocument.fileName
       );
       file = await storage.createFile(BUCKET_ID!, ID.unique(), inputFile);
     }
@@ -114,14 +120,14 @@ export const getPatient = async (userId: string): Promise<Patient | null> => {
       return null;
     }
 
-    const patientData = patients.documents[0]; // Assuming the first document is the correct one
+    const patientData = patients.documents[0];
 
     // Map Appwrite document to Patient interface
     const patient: Patient = {
       $id: patientData.$id,
-      name: patientData.name ?? "Unknown", // Default to "Unknown" if name is missing
-      age: patientData.age ?? undefined,   // Optional field, defaults to undefined
-      userId: patientData.userId,          // Ensure userId is present
+      name: patientData.name ?? "Unknown",
+      age: patientData.age ?? undefined,
+      userId: patientData.userId,
       identificationDocumentId: patientData.identificationDocumentId ?? null,
       identificationDocumentUrl: patientData.identificationDocumentUrl ?? null,
     };

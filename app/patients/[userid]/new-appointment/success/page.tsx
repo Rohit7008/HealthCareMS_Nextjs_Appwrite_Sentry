@@ -6,8 +6,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Doctors } from "@/constants";
-import { formatDateTime } from "@/lib/utils";
 import { getAppointment, Appointment } from "@/lib/api"; // Import API function
 
 const RequestSuccess = () => {
@@ -63,19 +61,6 @@ const RequestSuccess = () => {
       </div>
     );
   }
-
-  // Find the doctor from the list
-  const doctor = Doctors.find(
-    (doc) => doc.name === appointment.primaryPhysician
-  ) || {
-    name: appointment.primaryPhysician || "Unknown",
-    image: "/assets/icons/doctor-placeholder.svg",
-  };
-
-  // Format appointment date
-  const formattedDate = appointment.schedule
-    ? formatDateTime(new Date(appointment.schedule)).dateTime
-    : "Date not available";
 
   return (
     <div className="flex h-screen max-h-screen px-[5%]">
