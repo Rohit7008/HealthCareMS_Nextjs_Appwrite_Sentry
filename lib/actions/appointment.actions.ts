@@ -10,7 +10,9 @@ interface UpdateAppointmentParams {
   userId: string;
   timeZone: string;
   appointment: Partial<Appointment>;
-  type: "schedule" | "cancel";
+  type: "schedule" | "cancel" | "update"; // ✅ Add "update" if needed
+  cancellationReason?: string; 
+  status?: "pending" | "scheduled" | "cancelled"; // ✅ Add this field
 }
 
 import {
@@ -24,9 +26,8 @@ import { formatDateTime, parseStringify } from "../utils";
 // CREATE APPOINTMENT
 export const createAppointment = async (appointment: {
   userId: string;
-  schedule: string; 
-  status: string; 
-  primaryPhysician?: string; 
+  schedule: string;
+  primaryPhysician?: string;
 }) => {
   try {
     const newAppointment = await databases.createDocument(
@@ -35,8 +36,8 @@ export const createAppointment = async (appointment: {
       ID.unique(),
       {
         userId: appointment.userId,
-        schedule: appointment.schedule, 
-        status: appointment.status,
+        schedule: appointment.schedule,
+        status: "pending", // 🔒 Enforcing "pending" status
         primaryPhysician: appointment.primaryPhysician || "",
       }
     );
@@ -86,7 +87,6 @@ export const getRecentAppointmentList = async () => {
       ...counts,
       documents: appointments.documents,
     };
-
     return parseStringify(data);
   } catch (error) {
     console.error(
@@ -96,12 +96,17 @@ export const getRecentAppointmentList = async () => {
   }
 };
 
+
+
 //  SEND SMS NOTIFICATION
 export const sendSMSNotification = async (userId: string, content: string) => {
   try {
-    const message = await messaging.createSms(ID.unique(), content, [], [
-      userId,
-    ]);
+    const message = await messaging.createSms(
+      ID.unique(),
+      content,
+      [],
+      [userId]
+    );
     return parseStringify(message);
   } catch (error) {
     console.error("An error occurred while sending sms:", error);
@@ -115,34 +120,81 @@ export const updateAppointment = async ({
   timeZone,
   appointment,
   type,
+  cancellationReason,
 }: UpdateAppointmentParams) => {
   try {
-    const updatedAppointment = await databases.updateDocument(
-      DATABASE_ID!,
-      APPOINTMENT_COLLECTION_ID!,
+    console.log("🚀 Starting updateAppointment function...");
+
+    console.log("📌 Debug: Received parameters ->", {
       appointmentId,
-      appointment
-    );
+      userId,
+      timeZone,
+      appointment,
+      type,
+      cancellationReason,
+    });
 
-    if (!updatedAppointment) throw Error;
+    if (!appointmentId) {
+      throw new Error("❌ Missing appointmentId! Update cannot proceed.");
+    }
 
-    // Adjust formatDateTime to use only one argument for schedule
-    const formattedDateTime = formatDateTime(appointment.schedule, timeZone); // Pass only schedule and timeZone
+    if (!DATABASE_ID || !APPOINTMENT_COLLECTION_ID) {
+      throw new Error("❌ Missing database credentials!");
+    }
 
-    const smsMessage = `Greetings from CarePulse. ${
-      type === "schedule"
-        ? `Your appointment is confirmed for ${formattedDateTime.dateTime} with Dr. ${appointment.primaryPhysician}`
-        : `We regret to inform that your appointment for ${formattedDateTime.dateTime} is cancelled. Reason: ${appointment.cancellationReason}`
-    }.`;
+    let newStatus = appointment.status ?? "pending";
+    if (type === "cancel") newStatus = "cancelled";
+    else if (type === "schedule") newStatus = "scheduled";
+    else if (type === "update") newStatus = "scheduled"; // ✅ Explicitly update to "scheduled"
 
-    await sendSMSNotification(userId, smsMessage);
 
+    console.log("🛠️ Debug: Computed new status ->", newStatus);
+
+    // 🔥 Remove system fields before updating
+    const { $id, $databaseId, $collectionId, $permissions, ...sanitizedAppointment } = appointment;
+
+    const updateData: Partial<Appointment> = {
+      ...sanitizedAppointment, // ✅ Only allowed fields
+      status: newStatus, // 🔥 Ensure status is explicitly updated
+      ...(cancellationReason && { cancellationReason }),
+    };
+
+    console.log("📝 Debug: Final update data ->", updateData);
+
+    console.log("⏳ Sending request to Appwrite...");
+    let updatedAppointment;
+
+    try {
+      updatedAppointment = await databases.updateDocument(
+        DATABASE_ID!,
+        APPOINTMENT_COLLECTION_ID!,
+        appointmentId,
+        updateData
+      );
+
+      console.log("✅ Debug: Database response ->", updatedAppointment);
+
+      // 🔍 Verify status update in the response
+      if (updatedAppointment.status !== newStatus) {
+        console.warn("⚠️ Status update mismatch! Expected:", newStatus, "but got:", updatedAppointment.status);
+        throw new Error("❌ Status update failed!");
+      }
+    } catch (err: any) {
+      console.error("🚨 Appwrite API Error:", err.message || err);
+      throw new Error("❌ Failed to update the appointment.");
+    }
+
+    console.log("🔄 Revalidating path: /admin");
     revalidatePath("/admin");
+
+    console.log("✅ Appointment updated successfully!");
     return parseStringify(updatedAppointment);
   } catch (error) {
-    console.error("An error occurred while scheduling an appointment:", error);
+    console.error("❌ Final Catch - Appointment API Error:", error);
+    throw new Error("Unable to update the appointment. Please try again later.");
   }
 };
+
 
 // GET APPOINTMENT
 export const getAppointment = async (appointmentId: string) => {
@@ -161,3 +213,4 @@ export const getAppointment = async (appointmentId: string) => {
     );
   }
 };
+

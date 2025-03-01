@@ -1,7 +1,7 @@
 "use server";
 
 import { ID, Query, AppwriteException } from "node-appwrite";
-import { InputFile } from "node-appwrite/file"; 
+import { InputFile } from "node-appwrite/file";
 import {
   BUCKET_ID,
   DATABASE_ID,
@@ -14,7 +14,7 @@ import {
 } from "../appwrite.config";
 import { parseStringify } from "../utils";
 
-// Patient interface to define the expected data
+// Patient interface
 interface Patient {
   $id: string;
   name: string;
@@ -24,8 +24,8 @@ interface Patient {
   identificationDocumentUrl?: string | null;
 }
 
-// CREATE APPWRITE USER
-export const createUser = async (user: CreateUserParams) => {
+// CREATE USER
+export const createUser = async (user: { email: string; phone: string; name: string }) => {
   try {
     const newUser = await users.create(
       ID.unique(),
@@ -56,17 +56,21 @@ export const getUser = async (userId?: string) => {
     const user = await users.get(userId);
     return parseStringify(user);
   } catch (error) {
-    if (error instanceof AppwriteException) {
-      console.error("An error occurred while retrieving user details:", error.message);
-    } else {
-      console.error("Unexpected error:", error);
-    }
+    console.error("Error retrieving user details:", error);
     throw error;
   }
 };
 
 // REGISTER PATIENT
-export const registerPatient = async ({ identificationDocument, ...patient }: RegisterUserParams) => {
+export const registerPatient = async ({
+  identificationDocument,
+  ...patient
+}: {
+  identificationDocument?: any;
+  name: string;
+  age?: number;
+  userId: string;
+}) => {
   try {
     let file;
     if (identificationDocument) {
@@ -92,11 +96,7 @@ export const registerPatient = async ({ identificationDocument, ...patient }: Re
 
     return parseStringify(newPatient);
   } catch (error) {
-    if (error instanceof AppwriteException) {
-      console.error("An error occurred while creating a new patient:", error.message);
-    } else {
-      console.error("Unexpected error:", error);
-    }
+    console.error("Error registering patient:", error);
     throw error;
   }
 };
@@ -128,11 +128,7 @@ export const getPatient = async (userId: string): Promise<Patient | null> => {
 
     return patient;
   } catch (error) {
-    if (error instanceof AppwriteException) {
-      console.error("An error occurred while retrieving the patient details:", error.message);
-    } else {
-      console.error("Unexpected error:", error);
-    }
+    console.error("Error retrieving patient details:", error);
     throw error;
   }
 };

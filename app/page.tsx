@@ -1,11 +1,18 @@
-import { PatientForm } from "@/components/ui/forms/PatientForm";
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { PatientForm } from "@/components/forms/PatientForm";
 import Image from "next/image";
 import Link from "next/link";
+import { PasskeyModal } from "@/components/PasskeyModal";
 
-export default function Home() {
+const Home = () => {
+  const searchParams = useSearchParams();
+  const isAdmin = searchParams.get("admin") === "true";
+
   return (
     <div className="flex h-screen max-h-screen ">
-      {/* TODO: otp verification */}
+      {isAdmin && <PasskeyModal />}
       <section className="remove-scrollbar container my-auto ">
         <div className="sub-container max-w-[496px]">
           <Image
@@ -16,7 +23,7 @@ export default function Home() {
             className=" mb-12 h-10 w-fit"
           />
           <PatientForm />
-          <div className=" text-14-regular mt-20 flex justify-between">
+          <div className="text-14-regular mt-20 flex justify-between">
             <p className="justify-items-end text-dark-600 xl:text-left">
               © CarePulse 2024. All rights reserved.
             </p>
@@ -36,4 +43,6 @@ export default function Home() {
       />
     </div>
   );
-}
+};
+
+export default Home;

@@ -22,8 +22,8 @@ import { PatientFormValidation } from "@/lib/validation";
 
 import "react-datepicker/dist/react-datepicker.css";
 import "react-phone-number-input/style.css";
-import CustomFormField, { FormFieldType } from "@/components/CustomFormField";
-import { FileUploader } from "@/components/FileUploader";
+import CustomFormField, { FormFieldType } from "../CustomFormField";
+import { FileUploader } from "../FileUploader";
 import SubmitButton from "@/components/SubmitButton";
 
 const RegisterForm = ({ user }: { user: User }) => {
@@ -41,6 +41,7 @@ const RegisterForm = ({ user }: { user: User }) => {
   });
 
   const onSubmit = async (values: z.infer<typeof PatientFormValidation>) => {
+     console.log("Form submitted with values:", values); // Debugging
     setIsLoading(true);
 
     // Store file info in form data as
@@ -100,8 +101,10 @@ const RegisterForm = ({ user }: { user: User }) => {
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="flex-1 space-y-12"
+        onSubmit={form.handleSubmit(
+          (data) => onSubmit(data),
+          (errors) => console.log("Validation Errors:", errors)
+        )}
       >
         <section className="space-y-4">
           <h1 className="header">Welcome 👋</h1>

@@ -15,23 +15,67 @@ const RequestSuccess = () => {
   const userid = params.userid as string;
   const searchParams = useSearchParams();
   const appointmentId = searchParams.get("appointmentId") || "";
+
   const [appointment, setAppointment] = useState<Appointment | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (appointmentId) {
       getAppointment(appointmentId)
-        .then((data) => setAppointment(data))
-        .catch((error) => console.error("Error fetching appointment:", error));
+        .then((data) => {
+          if (!data) throw new Error("No appointment data found.");
+          setAppointment(data);
+        })
+        .catch((error) => {
+          console.error("Error fetching appointment:", error);
+          setError("Failed to load appointment details.");
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
   }, [appointmentId]);
 
-  if (!appointment) {
-    return <p>Loading...</p>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p>Loading appointment details...</p>
+      </div>
+    );
   }
 
+  if (error) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen">
+        <p className="text-red-500">{error}</p>
+        <Link href={`/patients/${userid}/new-appointment`}>
+          <Button variant="outline">Try Again</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  if (!appointment) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p>No appointment details available.</p>
+      </div>
+    );
+  }
+
+  // Find the doctor from the list
   const doctor = Doctors.find(
-    (doctor) => doctor.name === appointment.primaryPhysician
-  );
+    (doc) => doc.name === appointment.primaryPhysician
+  ) || {
+    name: appointment.primaryPhysician || "Unknown",
+    image: "/assets/icons/doctor-placeholder.svg",
+  };
+
+  // Format appointment date
+  const formattedDate = appointment.schedule
+    ? formatDateTime(new Date(appointment.schedule)).dateTime
+    : "Date not available";
 
   return (
     <div className="flex h-screen max-h-screen px-[5%]">
@@ -58,29 +102,6 @@ const RequestSuccess = () => {
             been successfully submitted!
           </h2>
           <p>We&apos;ll be in touch shortly to confirm.</p>
-        </section>
-
-        <section className="request-details">
-          <p>Requested appointment details:</p>
-          <div className="flex items-center gap-3">
-            <Image
-              src={doctor?.image || "/assets/icons/doctor-placeholder.svg"}
-              alt="doctor"
-              width={100}
-              height={100}
-              className="size-6"
-            />
-            <p className="whitespace-nowrap">Dr. {doctor?.name || "Unknown"}</p>
-          </div>
-          <div className="flex gap-2">
-            <Image
-              src="/assets/icons/calendar.svg"
-              height={24}
-              width={24}
-              alt="calendar"
-            />
-            <p>{formatDateTime(new Date(appointment.schedule), 'UTC').dateTime}</p>
-          </div>
         </section>
 
         <Button variant="outline" className="shad-primary-btn" asChild>

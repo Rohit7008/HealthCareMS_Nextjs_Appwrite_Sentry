@@ -11,3 +11,5 @@ export async function getAppointment(appointmentId: string): Promise<Appointment
     schedule: new Date().toISOString(),
   };
 }
+
+

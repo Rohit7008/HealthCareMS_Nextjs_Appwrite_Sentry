@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation"; // ✅ Use useRouter
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import RegisterForm from "@/components/ui/forms/RegisterForm";
+import RegisterForm from "@/components/forms/RegisterForm";
 import { getPatient, getUser } from "@/lib/actions/patient.actions";
 
 interface User {
@@ -16,12 +16,13 @@ interface User {
 
 const Register = () => {
   const params = useParams();
-  const router = useRouter(); // ✅ Initialize useRouter
+  const router = useRouter();
   const userid = Array.isArray(params.userid)
     ? params.userid[0]
     : params.userid ?? "";
 
   const [user, setUser] = useState<User | null>(null);
+  const [isExistingPatient, setIsExistingPatient] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -48,9 +49,7 @@ const Register = () => {
 
         const fetchedPatient = await getPatient(userid);
         if (fetchedPatient) {
-          // ✅ Redirect using useRouter instead of redirect()
-          router.push(`/patients/${userid}/new-appointment`);
-          return;
+          setIsExistingPatient(true);
         }
       } catch (err) {
         console.error("❌ Error fetching user or patient data:", err);
@@ -59,7 +58,13 @@ const Register = () => {
     };
 
     fetchData();
-  }, [userid, router]); // ✅ Include router in dependencies
+  }, [userid]);
+
+  useEffect(() => {
+    if (isExistingPatient) {
+      router.push(`/patients/${userid}/new-appointment`);
+    }
+  }, [isExistingPatient, userid, router]);
 
   if (error) {
     return <p className="text-red-500 font-semibold">{error}</p>;
@@ -81,7 +86,7 @@ const Register = () => {
             className="mb-12 h-10 w-fit"
           />
 
-          <RegisterForm user={user} />
+          {!isExistingPatient && <RegisterForm user={user} />}
 
           <p className="copyright py-12">© 2024 CarePluse</p>
         </div>
