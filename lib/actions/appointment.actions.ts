@@ -148,7 +148,7 @@ export const updateAppointment = async ({
     console.log("🛠️ Debug: Computed new status ->", newStatus);
 
     // 🔥 Remove system fields before updating
-    const { $id, $databaseId, $collectionId, $permissions, ...sanitizedAppointment } = appointment;
+    const { sanitizedAppointment } = appointment;
 
     const updateData: Partial<Appointment> = {
       ...sanitizedAppointment, // ✅ Only allowed fields

@@ -95,7 +95,7 @@ export const AppointmentForm = ({
           ? new Date(appointment.schedule)
           : new Date(),
     });
-  }, [appointment, form]);
+  }, [appointment, form,defaultValues]);
 
   const onSubmit = async (
     values: z.infer<typeof AppointmentFormValidation>
