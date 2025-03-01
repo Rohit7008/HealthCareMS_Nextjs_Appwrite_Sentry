@@ -21,7 +21,7 @@ import {
   databases,
   messaging,
 } from "../appwrite.config";
-import { formatDateTime, parseStringify } from "../utils";
+import { parseStringify } from "../utils";
 
 // CREATE APPOINTMENT
 export const createAppointment = async (appointment: {
@@ -96,8 +96,6 @@ export const getRecentAppointmentList = async () => {
   }
 };
 
-
-
 //  SEND SMS NOTIFICATION
 export const sendSMSNotification = async (userId: string, content: string) => {
   try {
@@ -147,7 +145,6 @@ export const updateAppointment = async ({
     else if (type === "schedule") newStatus = "scheduled";
     else if (type === "update") newStatus = "scheduled"; // ✅ Explicitly update to "scheduled"
 
-
     console.log("🛠️ Debug: Computed new status ->", newStatus);
 
     // 🔥 Remove system fields before updating
@@ -179,8 +176,8 @@ export const updateAppointment = async ({
         console.warn("⚠️ Status update mismatch! Expected:", newStatus, "but got:", updatedAppointment.status);
         throw new Error("❌ Status update failed!");
       }
-    } catch (err: any) {
-      console.error("🚨 Appwrite API Error:", err.message || err);
+    } catch (err: unknown) {
+      console.error("🚨 Appwrite API Error:", err);
       throw new Error("❌ Failed to update the appointment.");
     }
 
@@ -194,7 +191,6 @@ export const updateAppointment = async ({
     throw new Error("Unable to update the appointment. Please try again later.");
   }
 };
-
 
 // GET APPOINTMENT
 export const getAppointment = async (appointmentId: string) => {
@@ -213,4 +209,3 @@ export const getAppointment = async (appointmentId: string) => {
     );
   }
 };
-

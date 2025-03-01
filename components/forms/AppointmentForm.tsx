@@ -34,7 +34,6 @@ interface CreateAppointmentParams {
   cancellationReason?: string;
 }
 
-// ✅ Schema for validation
 const getAppointmentSchema = (type: "create" | "schedule" | "cancel") => {
   return z.object({
     primaryPhysician: z.string().min(1, "Doctor is required"),
@@ -71,7 +70,6 @@ export const AppointmentForm = ({
       ? getAppointmentSchema("create")
       : getAppointmentSchema(type);
 
-  // ✅ Properly set default values
   const defaultValues = {
     primaryPhysician: appointment?.primaryPhysician || "",
     schedule: appointment?.schedule
@@ -89,94 +87,88 @@ export const AppointmentForm = ({
   });
 
   useEffect(() => {
-    form.reset(defaultValues);
-  }, [appointment]);
+    form.reset({
+      ...defaultValues,
+      schedule:
+        appointment?.schedule &&
+        !isNaN(new Date(appointment.schedule).getTime())
+          ? new Date(appointment.schedule)
+          : new Date(),
+    });
+  }, [appointment, form]);
 
- const onSubmit = async (values: z.infer<typeof AppointmentFormValidation>) => {
-   setIsLoading(true);
-   console.log("🔍 Form Values:", values);
+  const onSubmit = async (
+    values: z.infer<typeof AppointmentFormValidation>
+  ) => {
+    setIsLoading(true);
+    try {
+      if (type === "create" && patientId) {
+        const newAppointment: CreateAppointmentParams = {
+          userId,
+          patient: patientId,
+          primaryPhysician: values.primaryPhysician,
+          schedule: new Date(values.schedule).toISOString(),
+          reason: values.reason || "",
+          status: "scheduled",
+          note: values.note || "",
+          phone: "1234567890",
+          name: "John Doe",
+        };
 
-   try {
-     if (type === "create" && patientId) {
-       const newAppointment: CreateAppointmentParams = {
-         userId,
-         patient: patientId,
-         primaryPhysician: values.primaryPhysician,
-         schedule: new Date(values.schedule).toISOString(),
-         reason: values.reason || "",
-         status: "scheduled", // ✅ Ensure new appointments are scheduled
-         note: values.note || "",
-         phone: "1234567890",
-         name: "John Doe",
-       };
+        const createdAppointment = await createAppointment(newAppointment);
 
-       console.log("🆕 Creating new appointment:", newAppointment);
-       const createdAppointment = await createAppointment(newAppointment);
+        if (createdAppointment) {
+          form.reset();
+          router.push(
+            `/patients/${userId}/new-appointment/success?appointmentId=${
+              createdAppointment.$id
+            }&doctor=${encodeURIComponent(
+              values.primaryPhysician
+            )}&date=${encodeURIComponent(
+              new Date(values.schedule).toISOString()
+            )}`
+          );
+        }
+      }
 
-       if (createdAppointment) {
-         console.log(
-           "✅ Appointment created successfully:",
-           createdAppointment
-         );
-         form.reset();
-         router.push(
-           `/patients/${userId}/new-appointment/success?appointmentId=${
-             createdAppointment.$id
-           }&doctor=${encodeURIComponent(
-             values.primaryPhysician
-           )}&date=${encodeURIComponent(
-             new Date(values.schedule).toISOString()
-           )}`
-         );
-       }
-     }
+      if ((type === "update" || type === "schedule") && appointment) {
+        await updateAppointment({
+          appointmentId: appointment.$id,
+          userId: userId,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          appointment: {
+            ...appointment,
+            schedule: new Date(values.schedule).toISOString(),
+            status: type === "update" ? "scheduled" : appointment.status,
+          },
+          type: "update",
+        });
 
-     if ((type === "update" || type === "schedule") && appointment) {
-       console.log("📝 Updating appointment:", appointment.$id);
+        if (setOpen) setOpen(false);
+      }
 
-       const updatedAppointment = await updateAppointment({
-         appointmentId: appointment.$id,
-         userId: userId,
-         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-         appointment: {
-           ...appointment,
-           schedule: new Date(values.schedule).toISOString(),
-           status: type === "update" ? "scheduled" : appointment.status, // ✅ Ensure status updates properly
-         },
-         type: "update",
-       });
+      if (type === "cancel" && appointment) {
+        await updateAppointment({
+          appointmentId: appointment.$id,
+          userId,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          appointment: {
+            ...appointment,
+            status: "cancelled",
+            cancellationReason:
+              values.cancellationReason || "No reason provided",
+          },
+          type: "cancel",
+        });
 
-       console.log("✅ Appointment updated successfully:", updatedAppointment);
-
-       if (setOpen) setOpen(false);
-     }
-
-     if (type === "cancel" && appointment) {
-       console.log("🚫 Cancelling appointment:", appointment.$id);
-
-       await updateAppointment({
-         appointmentId: appointment.$id,
-         userId,
-         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-         appointment: {
-           ...appointment,
-           status: "cancelled", // ✅ Explicitly set status
-           cancellationReason:
-             values.cancellationReason || "No reason provided",
-         },
-         type: "cancel",
-       });
-
-       console.log("✅ Appointment cancelled successfully");
-       if (setOpen) setOpen(false);
-     }
-   } catch (error) {
-     console.error("❌ Appointment API Error:", error);
-   } finally {
-     setIsLoading(false); // ✅ Hide loading state after completion
-   }
- };
-
+        if (setOpen) setOpen(false);
+      }
+    } catch (error) {
+      console.error("❌ Appointment API Error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 space-y-6">
