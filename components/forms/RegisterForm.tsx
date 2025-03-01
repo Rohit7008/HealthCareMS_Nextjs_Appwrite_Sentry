@@ -51,60 +51,59 @@ const RegisterForm = ({ user }: { user: User }) => {
     },
   });
 
- const onSubmit = async (values: PatientFormValues) => {
-   setIsLoading(true);
+const onSubmit = async (values: PatientFormValues) => {
+  setIsLoading(true);
 
-   let identificationDocument: IdentificationDocument | undefined;
+  let identificationDocument: IdentificationDocument | undefined;
 
-   if (
-     values.identificationDocument &&
-     values.identificationDocument.length > 0
-   ) {
-     const file = values.identificationDocument[0];
+  if (
+    values.identificationDocument &&
+    values.identificationDocument.length > 0
+  ) {
+    const file = values.identificationDocument[0]; // Get the selected file
 
-     identificationDocument = {
-       blobFile: file, // Ensure this is a Blob/File
-       fileName: file.name, // Extract the file name
-     };
-   }
+    identificationDocument = {
+      blobFile: file, // Ensure this is a File object
+      fileName: file.name, // Assign the file name
+    };
+  }
 
-   try {
-     const patient = {
-       userId: user.$id,
-       name: values.name,
-       email: values.email,
-       phone: values.phone,
-       birthDate: new Date(values.birthDate),
-       gender: values.gender,
-       address: values.address,
-       occupation: values.occupation,
-       emergencyContactName: values.emergencyContactName,
-       emergencyContactNumber: values.emergencyContactNumber,
-       primaryPhysician: values.primaryPhysician,
-       insuranceProvider: values.insuranceProvider,
-       insurancePolicyNumber: values.insurancePolicyNumber,
-       allergies: values.allergies,
-       currentMedication: values.currentMedication,
-       familyMedicalHistory: values.familyMedicalHistory,
-       pastMedicalHistory: values.pastMedicalHistory,
-       identificationType: values.identificationType,
-       identificationNumber: values.identificationNumber,
-       identificationDocument, // Pass as object, not FormData
-       privacyConsent: values.privacyConsent,
-     };
+  try {
+    const patient = {
+      userId: user.$id,
+      name: values.name,
+      email: values.email,
+      phone: values.phone,
+      birthDate: new Date(values.birthDate),
+      gender: values.gender,
+      address: values.address,
+      occupation: values.occupation,
+      emergencyContactName: values.emergencyContactName,
+      emergencyContactNumber: values.emergencyContactNumber,
+      primaryPhysician: values.primaryPhysician,
+      insuranceProvider: values.insuranceProvider,
+      insurancePolicyNumber: values.insurancePolicyNumber,
+      allergies: values.allergies,
+      currentMedication: values.currentMedication,
+      familyMedicalHistory: values.familyMedicalHistory,
+      pastMedicalHistory: values.pastMedicalHistory,
+      identificationType: values.identificationType,
+      identificationNumber: values.identificationNumber,
+      identificationDocument, // Correctly formatted as an object
+      privacyConsent: values.privacyConsent,
+    };
 
-     const newPatient = await registerPatient(patient);
+    const newPatient = await registerPatient(patient);
 
-     if (newPatient) {
-       router.push(`/patients/${user.$id}/new-appointment`);
-     }
-   } catch (error) {
-     console.error("Error submitting form:", error);
-   }
+    if (newPatient) {
+      router.push(`/patients/${user.$id}/new-appointment`);
+    }
+  } catch (error) {
+    console.error("Error submitting form:", error);
+  }
 
-   setIsLoading(false);
- };
-
+  setIsLoading(false);
+};
 
   return (
     <Form {...form}>
