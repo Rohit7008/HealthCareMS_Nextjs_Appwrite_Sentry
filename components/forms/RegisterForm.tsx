@@ -26,6 +26,11 @@ import { FileUploader } from "../FileUploader";
 import SubmitButton from "@/components/SubmitButton";
 
 // Define the IdentificationDocument type if not already defined
+type IdentificationDocument = {
+  blobFile: Blob;
+  fileName: string;
+};
+
 
 type User = {
   $id: string;
@@ -54,12 +59,14 @@ const RegisterForm = ({ user }: { user: User }) => {
     console.log("Form submitted with values:", values); // Debugging
     setIsLoading(true);
 
-    let formData = null;
+    let identificationDocument: IdentificationDocument | undefined = undefined;
+
     if ((values.identificationDocument ?? []).length > 0) {
       const file = (values.identificationDocument ?? [])[0];
-      formData = new FormData();
-      formData.append("blobFile", file);
-      formData.append("fileName", file.name);
+      identificationDocument = {
+        blobFile: file,
+        fileName: file.name,
+      };
     }
 
     try {
@@ -83,12 +90,7 @@ const RegisterForm = ({ user }: { user: User }) => {
         pastMedicalHistory: values.pastMedicalHistory,
         identificationType: values.identificationType,
         identificationNumber: values.identificationNumber,
-        identificationDocument: formData
-          ? {
-              blobFile: formData.get("blobFile") as Blob,
-              fileName: formData.get("fileName") as string,
-            }
-          : undefined, // Ensure it's undefined if not provided
+        identificationDocument, // Use the correct type
         privacyConsent: values.privacyConsent,
       };
 
