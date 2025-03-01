@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
 import { Form, FormControl } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -53,13 +52,15 @@ const RegisterForm = ({ user }: { user: User }) => {
     },
   });
 
-  const onSubmit = async (values: any) => {
+  type PatientFormValues = z.infer<typeof PatientFormValidation>;
+
+  const onSubmit = async (values: PatientFormValues) => {
     console.log("Form submitted with values:", values); // Debugging
     setIsLoading(true);
 
     let formData = null;
-    if (values.identificationDocument?.length > 0) {
-      const file = values.identificationDocument[0];
+    if ((values.identificationDocument ?? []).length > 0) {
+      const file = (values.identificationDocument ?? [])[0];
       formData = new FormData();
       formData.append("blobFile", file);
       formData.append("fileName", file.name);

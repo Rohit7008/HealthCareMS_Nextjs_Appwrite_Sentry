@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -70,16 +70,19 @@ export const AppointmentForm = ({
       ? getAppointmentSchema("create")
       : getAppointmentSchema(type);
 
-  const defaultValues = {
-    primaryPhysician: appointment?.primaryPhysician || "",
-    schedule: appointment?.schedule
-      ? new Date(appointment.schedule)
-      : new Date(),
-    reason: appointment?.reason || "",
-    note: appointment?.note || "",
-    cancellationReason:
-      type === "cancel" ? appointment?.cancellationReason || "" : undefined,
-  };
+  const defaultValues = useMemo(
+    () => ({
+      primaryPhysician: appointment?.primaryPhysician || "",
+      schedule: appointment?.schedule
+        ? new Date(appointment.schedule)
+        : new Date(),
+      reason: appointment?.reason || "",
+      note: appointment?.note || "",
+      cancellationReason:
+        type === "cancel" ? appointment?.cancellationReason || "" : undefined,
+    }),
+    [appointment, type]
+  );
 
   const form = useForm<z.infer<typeof AppointmentFormValidation>>({
     resolver: zodResolver(AppointmentFormValidation),
@@ -95,7 +98,7 @@ export const AppointmentForm = ({
           ? new Date(appointment.schedule)
           : new Date(),
     });
-  }, [appointment, form,defaultValues]);
+  }, [appointment, form, defaultValues]);
 
   const onSubmit = async (
     values: z.infer<typeof AppointmentFormValidation>
