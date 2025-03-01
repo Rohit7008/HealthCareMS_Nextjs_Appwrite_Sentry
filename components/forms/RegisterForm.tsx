@@ -26,11 +26,24 @@ import CustomFormField, { FormFieldType } from "../CustomFormField";
 import { FileUploader } from "../FileUploader";
 import SubmitButton from "@/components/SubmitButton";
 
+// Define the IdentificationDocument type if not already defined
+type IdentificationDocument = {
+  blobFile: FormDataEntryValue;
+  fileName: FormDataEntryValue;
+};
+
+type User = {
+  $id: string;
+  name: string;
+  email: string;
+  phone: string;
+};
+
 const RegisterForm = ({ user }: { user: User }) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof PatientFormValidation>>({
+  const form = useForm({
     resolver: zodResolver(PatientFormValidation),
     defaultValues: {
       ...PatientFormDefaultValues,
@@ -40,23 +53,16 @@ const RegisterForm = ({ user }: { user: User }) => {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof PatientFormValidation>) => {
-     console.log("Form submitted with values:", values); // Debugging
+  const onSubmit = async (values: any) => {
+    console.log("Form submitted with values:", values); // Debugging
     setIsLoading(true);
 
-    // Store file info in form data as
-    let formData;
-    if (
-      values.identificationDocument &&
-      values.identificationDocument?.length > 0
-    ) {
-      const blobFile = new Blob([values.identificationDocument[0]], {
-        type: values.identificationDocument[0].type,
-      });
-
+    let formData = null;
+    if (values.identificationDocument?.length > 0) {
+      const file = values.identificationDocument[0];
       formData = new FormData();
-      formData.append("blobFile", blobFile);
-      formData.append("fileName", values.identificationDocument[0].name);
+      formData.append("blobFile", file);
+      formData.append("fileName", file.name);
     }
 
     try {
@@ -80,9 +86,12 @@ const RegisterForm = ({ user }: { user: User }) => {
         pastMedicalHistory: values.pastMedicalHistory,
         identificationType: values.identificationType,
         identificationNumber: values.identificationNumber,
-        identificationDocument: values.identificationDocument
-          ? formData
-          : undefined,
+        identificationDocument: formData
+          ? {
+              blobFile: formData.get("blobFile") as Blob,
+              fileName: formData.get("fileName") as string,
+            }
+          : undefined, // Ensure it's undefined if not provided
         privacyConsent: values.privacyConsent,
       };
 
@@ -92,7 +101,7 @@ const RegisterForm = ({ user }: { user: User }) => {
         router.push(`/patients/${user.$id}/new-appointment`);
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error submitting form:", error);
     }
 
     setIsLoading(false);
