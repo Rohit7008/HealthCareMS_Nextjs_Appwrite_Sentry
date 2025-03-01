@@ -22,10 +22,6 @@ import { FileUploader } from "../FileUploader";
 import SubmitButton from "@/components/SubmitButton";
 import { useRouter } from "next/router";
 
-type IdentificationDocument = {
-  blobFile: Blob;
-  fileName: string;
-};
 
 type User = {
   $id: string;
@@ -53,12 +49,7 @@ const RegisterForm = ({ user }: { user: User }) => {
   const onSubmit = async (values: PatientFormValues) => {
     setIsLoading(true);
 
-    const identificationDocument = values.identificationDocument?.length
-      ? {
-          blobFile: values.identificationDocument[0],
-          fileName: values.identificationDocument[0].name,
-        }
-      : undefined;
+    
 
     const patient = {
       userId: user.$id,
