@@ -1,10 +1,7 @@
-"use client";
-
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import {  useForm } from "react-hook-form";
 import { z } from "zod";
 import { Form, FormControl } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
@@ -18,19 +15,17 @@ import {
 } from "@/constants";
 import { registerPatient } from "@/lib/actions/patient.actions";
 import { PatientFormValidation } from "@/lib/validation";
-
 import "react-datepicker/dist/react-datepicker.css";
 import "react-phone-number-input/style.css";
 import CustomFormField, { FormFieldType } from "../CustomFormField";
 import { FileUploader } from "../FileUploader";
 import SubmitButton from "@/components/SubmitButton";
+import { useRouter } from "next/router";
 
-// Define the IdentificationDocument type if not already defined
 type IdentificationDocument = {
   blobFile: Blob;
   fileName: string;
 };
-
 
 type User = {
   $id: string;
@@ -39,11 +34,13 @@ type User = {
   phone: string;
 };
 
+type PatientFormValues = z.infer<typeof PatientFormValidation>;
+
 const RegisterForm = ({ user }: { user: User }) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm({
+  const form = useForm<PatientFormValues>({
     resolver: zodResolver(PatientFormValidation),
     defaultValues: {
       ...PatientFormDefaultValues,
@@ -53,49 +50,25 @@ const RegisterForm = ({ user }: { user: User }) => {
     },
   });
 
-  type PatientFormValues = z.infer<typeof PatientFormValidation>;
-
   const onSubmit = async (values: PatientFormValues) => {
-    console.log("Form submitted with values:", values); // Debugging
     setIsLoading(true);
 
-    let identificationDocument: IdentificationDocument | undefined = undefined;
+    const identificationDocument = values.identificationDocument?.length
+      ? {
+          blobFile: values.identificationDocument[0],
+          fileName: values.identificationDocument[0].name,
+        }
+      : undefined;
 
-    if ((values.identificationDocument ?? []).length > 0) {
-      const file = (values.identificationDocument ?? [])[0];
-      identificationDocument = {
-        blobFile: file,
-        fileName: file.name,
-      };
-    }
+    const patient = {
+      userId: user.$id,
+      ...values,
+      birthDate: new Date(values.birthDate),
+      identificationDocument,
+    };
 
     try {
-      const patient = {
-        userId: user.$id,
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-        birthDate: new Date(values.birthDate),
-        gender: values.gender,
-        address: values.address,
-        occupation: values.occupation,
-        emergencyContactName: values.emergencyContactName,
-        emergencyContactNumber: values.emergencyContactNumber,
-        primaryPhysician: values.primaryPhysician,
-        insuranceProvider: values.insuranceProvider,
-        insurancePolicyNumber: values.insurancePolicyNumber,
-        allergies: values.allergies,
-        currentMedication: values.currentMedication,
-        familyMedicalHistory: values.familyMedicalHistory,
-        pastMedicalHistory: values.pastMedicalHistory,
-        identificationType: values.identificationType,
-        identificationNumber: values.identificationNumber,
-        identificationDocument, // Use the correct type
-        privacyConsent: values.privacyConsent,
-      };
-
       const newPatient = await registerPatient(patient);
-
       if (newPatient) {
         router.push(`/patients/${user.$id}/new-appointment`);
       }
@@ -105,7 +78,6 @@ const RegisterForm = ({ user }: { user: User }) => {
 
     setIsLoading(false);
   };
-
   return (
     <Form {...form}>
       <form
