@@ -26,10 +26,6 @@ import { FileUploader } from "../FileUploader";
 import SubmitButton from "@/components/SubmitButton";
 
 // Define the IdentificationDocument type if not already defined
-type IdentificationDocument = {
-  blobFile: FormDataEntryValue;
-  fileName: FormDataEntryValue;
-};
 
 type User = {
   $id: string;
