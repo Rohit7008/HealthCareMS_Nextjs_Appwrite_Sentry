@@ -1,14 +1,14 @@
 "use client";
 
+import { Suspense, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { getAppointment, Appointment } from "@/lib/api"; // Import API function
+import { getAppointment, Appointment } from "@/lib/api";
 
-const RequestSuccess = () => {
+const RequestSuccessContent = () => {
   const params = useParams();
   const userid = params.userid as string;
   const searchParams = useSearchParams();
@@ -98,6 +98,14 @@ const RequestSuccess = () => {
         <p className="copyright">© 2024 CarePulse</p>
       </div>
     </div>
+  );
+};
+
+const RequestSuccess = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RequestSuccessContent />
+    </Suspense>
   );
 };
 
