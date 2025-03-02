@@ -57,17 +57,15 @@ const RegisterForm = ({ user }: { user: User }) => {
 const onSubmit = async (values: PatientFormValues) => {
   setIsLoading(true);
 
-  let identificationDocument: IdentificationDocument | undefined;
-
+  let identificationDocument;
   if (
     values.identificationDocument &&
     values.identificationDocument.length > 0
   ) {
-    const file = values.identificationDocument[0]; // Get the selected file
-
+    const file = values.identificationDocument[0]; // First file from input
     identificationDocument = {
-      blobFile: file, // Ensure this is a File object
-      fileName: file.name, // Assign the file name
+      blobFile: new Blob([file], { type: file.type }),
+      fileName: file.name,
     };
   }
 
@@ -92,12 +90,11 @@ const onSubmit = async (values: PatientFormValues) => {
       pastMedicalHistory: values.pastMedicalHistory,
       identificationType: values.identificationType,
       identificationNumber: values.identificationNumber,
-      identificationDocument, // Correctly formatted as an object
+      identificationDocument, // ✅ Now it matches IdentificationDocument type
       privacyConsent: values.privacyConsent,
     };
 
     const newPatient = await registerPatient(patient);
-
     if (newPatient) {
       router.push(`/patients/${user.$id}/new-appointment`);
     }
@@ -107,6 +104,7 @@ const onSubmit = async (values: PatientFormValues) => {
 
   setIsLoading(false);
 };
+
 
   return (
     <Form {...form}>
