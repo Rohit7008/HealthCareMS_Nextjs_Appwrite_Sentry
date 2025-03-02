@@ -1,27 +1,60 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { fetchPatientById } from "@/lib/api/fetchPatient";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 import { Doctors } from "@/constants";
 import { Appointment } from "@/types/appwrite.types";
 import { AppointmentModal } from "@/components/AppointmentModal";
+import { databases } from "@/lib/appwrite.config";
+import { Query } from "node-appwrite";
 
 // Patient Cell Component
 const PatientCell = ({ userId }: { userId: string }) => {
   const [patientName, setPatientName] = useState<string>("Loading...");
 
   useEffect(() => {
+    if (!userId) {
+      setPatientName("N/A");
+      return;
+    }
+
     const fetchPatient = async () => {
-      if (!userId) return;
       try {
-        const patient = await fetchPatientById(userId);
-        setPatientName(patient?.name ?? "N/A");
-      } catch {
+        const DATABASE_ID = process.env.NEXT_PUBLIC_DATABASE_ID;
+        const PATIENT_COLLECTION_ID =
+          process.env.NEXT_PUBLIC_PATIENT_COLLECTION_ID;
+
+        // Debugging: Log environment variables
+        console.log("DATABASE_ID:", DATABASE_ID);
+        console.log("PATIENT_COLLECTION_ID:", PATIENT_COLLECTION_ID);
+
+        // Ensure values exist
+        if (!DATABASE_ID || !PATIENT_COLLECTION_ID) {
+          throw new Error("❌ Missing database or collection ID");
+        }
+
+        // Query the database
+        const response = await databases.listDocuments(
+          DATABASE_ID,
+          PATIENT_COLLECTION_ID,
+          [Query.equal("userId", userId)]
+        );
+
+        if (response.documents.length === 0) {
+          console.warn(`⚠️ No patient found for userId: ${userId}`);
+          setPatientName("N/A");
+          return;
+        }
+
+        console.log("Fetched Patient Data:", response.documents[0]);
+        setPatientName(response.documents[0]?.name ?? "N/A");
+      } catch (error) {
+        console.error("❌ Error fetching patient data:", error);
         setPatientName("N/A");
       }
     };
+
     fetchPatient();
   }, [userId]);
 
