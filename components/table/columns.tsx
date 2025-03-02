@@ -25,14 +25,14 @@ const PatientCell = ({ userId }: { userId: string }) => {
         const PATIENT_COLLECTION_ID =
           process.env.NEXT_PUBLIC_PATIENT_COLLECTION_ID;
 
-        // Debugging: Log environment variables
-        console.log("DATABASE_ID:", DATABASE_ID);
-        console.log("PATIENT_COLLECTION_ID:", PATIENT_COLLECTION_ID);
-
-        // Ensure values exist
+        // 🚨 Debugging: Ensure env variables are loaded in production
         if (!DATABASE_ID || !PATIENT_COLLECTION_ID) {
-          throw new Error("❌ Missing database or collection ID");
+          console.error("❌ Missing database or collection ID");
+          setPatientName("N/A");
+          return;
         }
+
+        console.log(`🔎 Fetching patient for userId: ${userId}`);
 
         // Query the database
         const response = await databases.listDocuments(
@@ -41,14 +41,15 @@ const PatientCell = ({ userId }: { userId: string }) => {
           [Query.equal("userId", userId)]
         );
 
-        if (response.documents.length === 0) {
+        if (!response || response.documents.length === 0) {
           console.warn(`⚠️ No patient found for userId: ${userId}`);
           setPatientName("N/A");
           return;
         }
 
-        console.log("Fetched Patient Data:", response.documents[0]);
-        setPatientName(response.documents[0]?.name ?? "N/A");
+        // ✅ Patient found, set name
+        console.log("✅ Fetched Patient Data:", response.documents[0]);
+        setPatientName(response.documents[0]?.name || "N/A");
       } catch (error) {
         console.error("❌ Error fetching patient data:", error);
         setPatientName("N/A");
