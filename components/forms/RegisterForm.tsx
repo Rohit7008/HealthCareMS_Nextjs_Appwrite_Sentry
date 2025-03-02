@@ -57,14 +57,14 @@ const RegisterForm = ({ user }: { user: User }) => {
 const onSubmit = async (values: PatientFormValues) => {
   setIsLoading(true);
 
-  let identificationDocument;
+  let identificationDocument: IdentificationDocument | undefined;
   if (
     values.identificationDocument &&
     values.identificationDocument.length > 0
   ) {
     const file = values.identificationDocument[0]; // First file from input
     identificationDocument = {
-      blobFile: new Blob([file], { type: file.type }),
+      blobFile: new Blob([await file.arrayBuffer()], { type: file.type }),
       fileName: file.name,
     };
   }
@@ -104,7 +104,6 @@ const onSubmit = async (values: PatientFormValues) => {
 
   setIsLoading(false);
 };
-
 
   return (
     <Form {...form}>
