@@ -1,12 +1,13 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { PatientForm } from "@/components/forms/PatientForm";
 import Image from "next/image";
 import Link from "next/link";
 import { PasskeyModal } from "@/components/PasskeyModal";
 
-const Home = () => {
+const HomeContent = () => {
   const searchParams = useSearchParams();
   const isAdmin = searchParams.get("admin") === "true";
 
@@ -42,6 +43,14 @@ const Home = () => {
         className="side-img max-w-[50%]"
       />
     </div>
+  );
+};
+
+const Home = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 };
 
