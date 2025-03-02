@@ -82,8 +82,6 @@ const onSubmit = async (values: PatientFormValues) => {
           }
         : undefined,
     };
-
-
     const response = await registerPatient(patientData);
     if (response) {
       router.push(`/patients/${user.$id}/new-appointment`);
