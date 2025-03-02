@@ -77,7 +77,6 @@ const onSubmit = async (values: PatientFormValues) => {
       identificationDocument: values.identificationDocument?.[0]
         ? {
             fileName: values.identificationDocument[0].name,
-            fileData: await values.identificationDocument[0].text(), // Extract text (or use FileReader for binary)
             blobFile: values.identificationDocument[0], // Ensure `blobFile` is included
           }
         : undefined,
@@ -89,7 +88,6 @@ const onSubmit = async (values: PatientFormValues) => {
   } catch (error) {
     console.error("Error submitting form:", error);
   }
-
   setIsLoading(false);
 };
 
