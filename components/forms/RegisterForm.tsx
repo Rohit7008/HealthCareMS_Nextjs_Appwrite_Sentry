@@ -47,51 +47,53 @@ const RegisterForm = ({ user }: { user: User }) => {
     },
   });
 
-  const onSubmit = async (values: PatientFormValues) => {
-    setIsLoading(true);
+const onSubmit = async (values: PatientFormValues) => {
+  setIsLoading(true);
 
-    try {
-      const formData = new FormData();
-      formData.append("userId", user.$id);
-      formData.append("name", values.name);
-      formData.append("email", values.email);
-      formData.append("phone", values.phone);
-      formData.append("birthDate", new Date(values.birthDate).toISOString());
-      formData.append("gender", values.gender);
-      formData.append("address", values.address);
-      formData.append("occupation", values.occupation);
-      formData.append("emergencyContactName", values.emergencyContactName);
-      formData.append("emergencyContactNumber", values.emergencyContactNumber);
-      formData.append("primaryPhysician", values.primaryPhysician);
-      formData.append("insuranceProvider", values.insuranceProvider);
-      formData.append("insurancePolicyNumber", values.insurancePolicyNumber);
-      formData.append("allergies", values.allergies);
-      formData.append("currentMedication", values.currentMedication);
-      formData.append("familyMedicalHistory", values.familyMedicalHistory);
-      formData.append("pastMedicalHistory", values.pastMedicalHistory);
-      formData.append("identificationType", values.identificationType);
-      formData.append("identificationNumber", values.identificationNumber);
-      formData.append("privacyConsent", values.privacyConsent.toString());
+  try {
+    const patientData = {
+      userId: user.$id || "",
+      name: values.name || "",
+      email: values.email || "",
+      phone: values.phone || "",
+      birthDate: values.birthDate
+        ? new Date(values.birthDate).toISOString()
+        : "",
+      gender: values.gender || "",
+      address: values.address || "",
+      occupation: values.occupation || "",
+      emergencyContactName: values.emergencyContactName || "",
+      emergencyContactNumber: values.emergencyContactNumber || "",
+      primaryPhysician: values.primaryPhysician || "",
+      insuranceProvider: values.insuranceProvider || "",
+      insurancePolicyNumber: values.insurancePolicyNumber || "",
+      allergies: values.allergies || "",
+      currentMedication: values.currentMedication || "",
+      familyMedicalHistory: values.familyMedicalHistory || "",
+      pastMedicalHistory: values.pastMedicalHistory || "",
+      identificationType: values.identificationType || "",
+      identificationNumber: values.identificationNumber || "",
+      privacyConsent: values.privacyConsent ? true : false,
+      identificationDocument: values.identificationDocument?.[0]
+        ? {
+            fileName: values.identificationDocument[0].name,
+            fileData: await values.identificationDocument[0].text(), // Extract text (or use FileReader for binary)
+            blobFile: values.identificationDocument[0], // Ensure `blobFile` is included
+          }
+        : undefined,
+    };
 
-      // Append file if uploaded
-      if (
-        values.identificationDocument &&
-        values.identificationDocument.length > 0
-      ) {
-        const file = values.identificationDocument[0];
-        formData.append("identificationDocument", file, file.name);
-      }
 
-      const response = await registerPatient(formData);
-      if (response) {
-        router.push(`/patients/${user.$id}/new-appointment`);
-      }
-    } catch (error) {
-      console.error("Error submitting form:", error);
+    const response = await registerPatient(patientData);
+    if (response) {
+      router.push(`/patients/${user.$id}/new-appointment`);
     }
+  } catch (error) {
+    console.error("Error submitting form:", error);
+  }
 
-    setIsLoading(false);
-  };
+  setIsLoading(false);
+};
 
   return (
     <Form {...form}>
