@@ -64,10 +64,11 @@ const onSubmit = async (values: PatientFormValues) => {
   ) {
     const file = values.identificationDocument[0]; // First file from input
     identificationDocument = {
-      blobFile: new Blob([await file.arrayBuffer()], { type: file.type }),
+      blobFile: file,
       fileName: file.name,
     };
   }
+
 
   try {
     const patient = {
