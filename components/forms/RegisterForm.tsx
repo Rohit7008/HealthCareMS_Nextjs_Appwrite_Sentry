@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
@@ -22,7 +23,7 @@ import "react-phone-number-input/style.css";
 import CustomFormField, { FormFieldType } from "../CustomFormField";
 import { FileUploader } from "../FileUploader";
 import SubmitButton from "@/components/SubmitButton";
-import { useRouter } from "next/router";
+
 
 type IdentificationDocument = {
   blobFile: Blob;
