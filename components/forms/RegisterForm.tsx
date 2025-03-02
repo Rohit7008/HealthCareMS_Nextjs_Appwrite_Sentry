@@ -24,11 +24,6 @@ import CustomFormField, { FormFieldType } from "../CustomFormField";
 import { FileUploader } from "../FileUploader";
 import SubmitButton from "@/components/SubmitButton";
 
-type IdentificationDocument = {
-  blobFile: Blob;
-  fileName: string;
-};
-
 type User = {
   $id: string;
   name: string;
@@ -55,45 +50,40 @@ const RegisterForm = ({ user }: { user: User }) => {
   const onSubmit = async (values: PatientFormValues) => {
     setIsLoading(true);
 
-    let identificationDocument: IdentificationDocument | undefined;
-    if (
-      values.identificationDocument &&
-      values.identificationDocument.length > 0
-    ) {
-      const file = values.identificationDocument[0]; // First file from input
-      identificationDocument = {
-        blobFile: file,
-        fileName: file.name,
-      };
-    }
-
     try {
-      const patient = {
-        userId: user.$id,
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-        birthDate: new Date(values.birthDate),
-        gender: values.gender,
-        address: values.address,
-        occupation: values.occupation,
-        emergencyContactName: values.emergencyContactName,
-        emergencyContactNumber: values.emergencyContactNumber,
-        primaryPhysician: values.primaryPhysician,
-        insuranceProvider: values.insuranceProvider,
-        insurancePolicyNumber: values.insurancePolicyNumber,
-        allergies: values.allergies,
-        currentMedication: values.currentMedication,
-        familyMedicalHistory: values.familyMedicalHistory,
-        pastMedicalHistory: values.pastMedicalHistory,
-        identificationType: values.identificationType,
-        identificationNumber: values.identificationNumber,
-        identificationDocument: identificationDocument, // ✅ Correctly assigned
-        privacyConsent: values.privacyConsent,
-      };
+      const formData = new FormData();
+      formData.append("userId", user.$id);
+      formData.append("name", values.name);
+      formData.append("email", values.email);
+      formData.append("phone", values.phone);
+      formData.append("birthDate", new Date(values.birthDate).toISOString());
+      formData.append("gender", values.gender);
+      formData.append("address", values.address);
+      formData.append("occupation", values.occupation);
+      formData.append("emergencyContactName", values.emergencyContactName);
+      formData.append("emergencyContactNumber", values.emergencyContactNumber);
+      formData.append("primaryPhysician", values.primaryPhysician);
+      formData.append("insuranceProvider", values.insuranceProvider);
+      formData.append("insurancePolicyNumber", values.insurancePolicyNumber);
+      formData.append("allergies", values.allergies);
+      formData.append("currentMedication", values.currentMedication);
+      formData.append("familyMedicalHistory", values.familyMedicalHistory);
+      formData.append("pastMedicalHistory", values.pastMedicalHistory);
+      formData.append("identificationType", values.identificationType);
+      formData.append("identificationNumber", values.identificationNumber);
+      formData.append("privacyConsent", values.privacyConsent.toString());
 
-      const newPatient = await registerPatient(patient);
-      if (newPatient) {
+      // Append file if uploaded
+      if (
+        values.identificationDocument &&
+        values.identificationDocument.length > 0
+      ) {
+        const file = values.identificationDocument[0];
+        formData.append("identificationDocument", file, file.name);
+      }
+
+      const response = await registerPatient(formData);
+      if (response) {
         router.push(`/patients/${user.$id}/new-appointment`);
       }
     } catch (error) {
@@ -102,6 +92,7 @@ const RegisterForm = ({ user }: { user: User }) => {
 
     setIsLoading(false);
   };
+
   return (
     <Form {...form}>
       <form
