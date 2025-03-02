@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
-import {  useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Form, FormControl } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
@@ -24,12 +24,10 @@ import CustomFormField, { FormFieldType } from "../CustomFormField";
 import { FileUploader } from "../FileUploader";
 import SubmitButton from "@/components/SubmitButton";
 
-
 type IdentificationDocument = {
   blobFile: Blob;
   fileName: string;
 };
-
 
 type User = {
   $id: string;
@@ -54,58 +52,56 @@ const RegisterForm = ({ user }: { user: User }) => {
     },
   });
 
-const onSubmit = async (values: PatientFormValues) => {
-  setIsLoading(true);
+  const onSubmit = async (values: PatientFormValues) => {
+    setIsLoading(true);
 
-  let identificationDocument: IdentificationDocument | undefined;
-  if (
-    values.identificationDocument &&
-    values.identificationDocument.length > 0
-  ) {
-    const file = values.identificationDocument[0]; // First file from input
-    identificationDocument = {
-      blobFile: file,
-      fileName: file.name,
-    };
-  }
-
-
-  try {
-    const patient = {
-      userId: user.$id,
-      name: values.name,
-      email: values.email,
-      phone: values.phone,
-      birthDate: new Date(values.birthDate),
-      gender: values.gender,
-      address: values.address,
-      occupation: values.occupation,
-      emergencyContactName: values.emergencyContactName,
-      emergencyContactNumber: values.emergencyContactNumber,
-      primaryPhysician: values.primaryPhysician,
-      insuranceProvider: values.insuranceProvider,
-      insurancePolicyNumber: values.insurancePolicyNumber,
-      allergies: values.allergies,
-      currentMedication: values.currentMedication,
-      familyMedicalHistory: values.familyMedicalHistory,
-      pastMedicalHistory: values.pastMedicalHistory,
-      identificationType: values.identificationType,
-      identificationNumber: values.identificationNumber,
-      identificationDocument, // ✅ Now it matches IdentificationDocument type
-      privacyConsent: values.privacyConsent,
-    };
-
-    const newPatient = await registerPatient(patient);
-    if (newPatient) {
-      router.push(`/patients/${user.$id}/new-appointment`);
+    let identificationDocument: IdentificationDocument | undefined;
+    if (
+      values.identificationDocument &&
+      values.identificationDocument.length > 0
+    ) {
+      const file = values.identificationDocument[0]; // First file from input
+      identificationDocument = {
+        blobFile: file,
+        fileName: file.name,
+      };
     }
-  } catch (error) {
-    console.error("Error submitting form:", error);
-  }
 
-  setIsLoading(false);
-};
+    try {
+      const patient = {
+        userId: user.$id,
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        birthDate: new Date(values.birthDate),
+        gender: values.gender,
+        address: values.address,
+        occupation: values.occupation,
+        emergencyContactName: values.emergencyContactName,
+        emergencyContactNumber: values.emergencyContactNumber,
+        primaryPhysician: values.primaryPhysician,
+        insuranceProvider: values.insuranceProvider,
+        insurancePolicyNumber: values.insurancePolicyNumber,
+        allergies: values.allergies,
+        currentMedication: values.currentMedication,
+        familyMedicalHistory: values.familyMedicalHistory,
+        pastMedicalHistory: values.pastMedicalHistory,
+        identificationType: values.identificationType,
+        identificationNumber: values.identificationNumber,
+        identificationDocument: identificationDocument, // ✅ Correctly assigned
+        privacyConsent: values.privacyConsent,
+      };
 
+      const newPatient = await registerPatient(patient);
+      if (newPatient) {
+        router.push(`/patients/${user.$id}/new-appointment`);
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+
+    setIsLoading(false);
+  };
   return (
     <Form {...form}>
       <form
