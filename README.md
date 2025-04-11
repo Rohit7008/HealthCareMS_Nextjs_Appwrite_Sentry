@@ -1,6 +1,4 @@
-Absolutely! Here's your refined and impressive `README.md` for **CarePulsePMS**, matching the clean and professional tone you shared — while including the ✨ Admin Dashboard ✨ and everything that makes your project stand out.
 
----
 
 # 💊 CarePulsePMS – Patient Management System
 
