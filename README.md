@@ -1,6 +1,7 @@
 
 
-# 💊 CarePulsePMS – Patient Management System
+#  ![favicon-3](https://github.com/user-attachments/assets/53a3bbcd-22b8-4da8-af1b-61aa6e0321a0) CarePulsePMS – Patient Management System
+
 
 [Live Demo 🚀](https://carepulsepms.vercel.app)
 
@@ -32,10 +33,6 @@ Built using **Next.js 14**, **Appwrite**, **React Hook Form**, **Zod**, and **Ta
 
 ### Patient Appointment Flow  
 ![image](https://github.com/user-attachments/assets/69e5836a-6d81-4b5d-b7d3-a7486ea890d0)
-![image](https://github.com/user-attachments/assets/32c21e18-869b-479f-b7d9-b95128370a2d)
-![image](https://github.com/user-attachments/assets/e2a6a0ad-eaf7-44ff-8be8-1c7ca392415d)
-![image](https://github.com/user-attachments/assets/fb373697-29be-4c74-8729-28c5c73f2361)
-![image](https://github.com/user-attachments/assets/d5b8e7fc-d484-420b-b068-b2c712890b46)
 
 ### Admin Dashboard  
 ![image](https://github.com/user-attachments/assets/afd47e8c-5ee9-4802-af3d-089fe25f42fa)
@@ -119,6 +116,7 @@ carepulsepms/
 
 **Rohit Pottavathini**  
 Full-Stack Developer | Designer | Automation Enthusiast  
+📧 rowork30@gmail.com
 🌐 [carepulsepms.vercel.app](https://carepulsepms.vercel.app)  
 📸 [Instagram](https://instagram.com/urbannxt) · 🧑‍💻 [GitHub](https://github.com/rohitpotti) · 💼 [LinkedIn](https://linkedin.com/in/rohitpotti)
 
