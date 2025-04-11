@@ -1,6 +1,6 @@
 
 
-#  ![favicon-3](https://github.com/user-attachments/assets/53a3bbcd-22b8-4da8-af1b-61aa6e0321a0) CarePulsePMS – Patient Management System
+#  🩺 CarePulsePMS – Patient Management System
 
 
 [Live Demo 🚀](https://carepulsepms.vercel.app)
